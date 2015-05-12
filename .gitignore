@@ -55,3 +55,6 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# the API key should not be in source control
+api.key

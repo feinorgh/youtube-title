@@ -1,0 +1,54 @@
+#!/usr/bin/env python2
+
+import socket
+import ssl
+import time
+import re
+import youtube_title
+
+server   = "chat.freenode.net"
+port     = 6697
+channel  = "#gentoo-se"
+nickname = "tubeworm"
+realname = "I am ze Tube Worm"
+password = "sosecret"
+
+if __name__ == "__main__":
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    irc    = ssl.wrap_socket(client)
+
+    print("Connecting to [%s]" % (server))
+
+    irc.connect((server, port))
+    irc.setblocking(False)
+    irc.send("PASS %s\n" % (password))
+    irc.send("USER %s 0 meh :%s\n" % (nickname, realname))
+    irc.send("NICK %s\n" % (nickname))
+    irc.send("PRIVMSG nickserv :identify %s %s\r\n" % (nickname, password))
+    irc.send("JOIN %s\n" % (channel))
+
+    re_youtube_link = re.compile("""
+        :
+        .*
+        (https?://\w+[.]youtube[.]\w+/.+)
+    """, re.MULTILINE | re.VERBOSE)
+
+    while True:
+        time.sleep(0.5)
+
+        try:
+            text = irc.recv(2040)
+            print text
+
+            if text.find("PING") != -1:
+                irc.send("PONG %s\r\n" % (text.split()[1]))
+
+            links = re_youtube_link.search(text)
+            if links.groups():
+                url = links.group(1).split()[0]
+                print(url)
+                title = youtubetitle.get_video_title(url)
+                irc.send("PRIVMSG %s :%s\r\n" % (channel, title))
+
+        except Exception as e:
+            continue

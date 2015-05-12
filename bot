@@ -8,7 +8,7 @@ import youtube_title
 
 server   = "chat.freenode.net"
 port     = 6697
-channel  = "#gentoo-se"
+channels = ["#gentoo-se"]
 nickname = "tubeworm"
 realname = "I am ze Tube Worm"
 password = "sosecret"
@@ -25,7 +25,8 @@ if __name__ == "__main__":
     irc.send("USER %s 0 meh :%s\n" % (nickname, realname))
     irc.send("NICK %s\n" % (nickname))
     irc.send("PRIVMSG nickserv :identify %s %s\r\n" % (nickname, password))
-    irc.send("JOIN %s\n" % (channel))
+    for channel in channels:
+        irc.send("JOIN %s\n" % (channel))
 
     re_youtube_link = re.compile("""
         :
@@ -45,10 +46,12 @@ if __name__ == "__main__":
 
             links = re_youtube_link.search(text)
             if links.groups():
-                url = links.group(1).split()[0]
-                print(url)
-                title = youtubetitle.get_video_title(url)
-                irc.send("PRIVMSG %s :%s\r\n" % (channel, title))
+                channel = text.split()[2]
+                if channel in channels:
+                    url = links.group(1).split()[0]
+                    print("Getting title for '%'" % (url))
+                    title = youtubetitle.get_video_title(url)
+                    irc.send("PRIVMSG %s :%s\r\n" % (channel, title))
 
         except Exception as e:
             continue
